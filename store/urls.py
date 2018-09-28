@@ -4,13 +4,12 @@ from django.views.generic import TemplateView
 from store import views
 
 app_name = 'store'
+
 handler404 = 'views.page_not_found_view'
 handler500 = 'views.server_error_view'
 
-# https://wsvincent.com/django-user-authentication-tutorial-login-and-logout/
 
 urlpatterns = [
-    # path('', TemplateView.as_view(template_name='home.html'), name='home'),
 
     path('404/', views.page_not_found_view),
     path('500/', views.server_error_view),
@@ -45,3 +44,6 @@ urlpatterns = [
          name='legal'),
 
 ]
+
+# https://wsvincent.com/django-user-authentication-tutorial-login-and-logout/
+# path('', TemplateView.as_view(template_name='home.html'), name='home'),
