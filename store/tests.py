@@ -69,7 +69,6 @@ class UserListTestCase(TestCase):
         for user in users:
             if user.id == 1:
                 response = logic.create_user_list(self.user_0)
-                print(f"Response : {response}")
 
 
 class GetIdTestCase(TestCase):
@@ -96,7 +95,7 @@ class FetchProductsIdTestCase(TestCase):
 
     def setUp(self):
         product = 'Nutella'
-        self.url = f"https://fr.openfoodfacts.org/cgi/search.pl?search_terms={product}"
+        self.url = "https://fr.openfoodfacts.org/cgi/search.pl?search_terms={}".format(product)
 
     def test_fetch_products_id(self):
         """
@@ -319,15 +318,11 @@ class FetchSubstitutesTestCase(TestCase):
         category = 'fr:ratatouilles'
         grade = 'a'
 
-        api_search = "https://fr.openfoodfacts.org/cgi/search.pl?action=process"
-        category_as_first_filter = "&tagtype_0=categories&tag_contains_0=contains"
-        grade_as_second_filter = "tagtype_1=nutrition_grades&tag_contains_1=contains"
-        url_params = '&sort_by=unique_scans_n&page_size=20&axis_x=energy&axis_y=products_n'
-        display_method = "action=display"
-
-        self.url = f"{api_search}{category_as_first_filter}&tag_0={category}" \
-                   f"&{grade_as_second_filter}&tag_1={grade}{url_params}" \
-                   f"&{display_method}"
+        self.url = "https://fr.openfoodfacts.org/cgi/search.pl?action=process&" \
+                   "tagtype_0=categories&tag_contains_0=contains&tag_0={}" \
+                   "&tagtype_1=nutrition_grades&tag_contains_1=contains&tag_1={}" \
+                   "&sort_by=unique_scans_n&page_size=20&axis_x=energy&axis_y=products_n" \
+                   "&action=display".format(category, grade)
 
     def test_fetch_substitutes(self):
         """
@@ -335,6 +330,27 @@ class FetchSubstitutesTestCase(TestCase):
         """
 
         response = logic.fetch_substitutes(self.url, '3560070486274')
+        self.assertEqual(response, response)
+
+
+class FetchNovaSubstitutesTestCase(TestCase):
+
+    def setUp(self):
+        category = 'fr:ratatouilles'
+        nova_groups = '4'
+
+        self.url = "https://fr.openfoodfacts.org/cgi/search.pl?action=process&" \
+                   "tagtype_0=categories&tag_contains_0=contains&tag_0={}" \
+                   "&tagtype_1=nova_groups&tag_contains_1=contains&tag_1={}" \
+                   "&sort_by=unique_scans_n&page_size=20&axis_x=energy&axis_y=products_n" \
+                   "&action=display".format(category, nova_groups)
+
+    def test_fetch_substitutes(self):
+        """
+        Fetch substitutes
+        """
+
+        response = logic.fetch_nova_substitutes(self.url, '3560070486274')
         self.assertEqual(response, response)
 
 
@@ -359,15 +375,11 @@ class UrlCategoryTestCase(TestCase):
         category = 'fr:ratatouilles'
         grade = 'a'
 
-        api_search = "https://fr.openfoodfacts.org/cgi/search.pl?action=process"
-        category_as_first_filter = "&tagtype_0=categories&tag_contains_0=contains"
-        grade_as_second_filter = "tagtype_1=nutrition_grades&tag_contains_1=contains"
-        url_params = '&sort_by=unique_scans_n&page_size=20&axis_x=energy&axis_y=products_n'
-        display_method = "action=display"
-
-        self.url = f"{api_search}{category_as_first_filter}&tag_0={category}" \
-                   f"&{grade_as_second_filter}&tag_1={grade}{url_params}" \
-                   f"&{display_method}"
+        self.url = "https://fr.openfoodfacts.org/cgi/search.pl?action=process&" \
+                   "tagtype_0=categories&tag_contains_0=contains&tag_0={}" \
+                   "&tagtype_1=nutrition_grades&tag_contains_1=contains&tag_1={}" \
+                   "&sort_by=unique_scans_n&page_size=20&axis_x=energy&axis_y=products_n" \
+                   "&action=display".format(category, grade)
 
     def test_url_category_for_grade(self):
         """
