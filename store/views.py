@@ -12,6 +12,7 @@ from django.template import RequestContext
 from django.urls import reverse_lazy
 from django.views import generic
 
+import logging
 from gofacts_project import settings
 from store import logic
 from .models import Product, Profile
@@ -78,6 +79,7 @@ def search(request, product_code=None):
     """
     query = request.GET.get('query')
     full_result = request.GET.get('full_result')
+    nova = request.GET.get('nova')
     product_array = logic.get_product_array(query, product_code)
 
     if product_code is not None:
@@ -98,8 +100,12 @@ def search(request, product_code=None):
 
         substitutes = None
         if full_result:
-            print("Now for the substitutes ! (view)")
-            substitutes = logic.get_substitutes(product_categories, product_array[1], product_grade)
+            if nova:
+                print("We are searching for more natural products ! (view)")
+                substitutes = logic.get_nova_substitutes(product_categories, product_array[1], nova)
+            else:
+                print("Now for the substitutes ! (view)")
+                substitutes = logic.get_substitutes(product_categories, product_array[1], product_grade)
 
         product_code = logic.int_code(product_code)
         context = {
@@ -113,6 +119,7 @@ def search(request, product_code=None):
             'full_result': full_result,
             'substitutes': substitutes
         }
+        logging.info('New search for {}'.format(product_name))
         return render(request, 'store/results.html', context)
 
     raise Http404("There is no product for the search")
@@ -125,7 +132,6 @@ def product_page(request, product_code):
     :param product_code:
     :return: Page product
     """
-    print(f"This will be the page for : {product_code}")
     product = product_code
 
     if product:
@@ -171,7 +177,6 @@ def profile_page(request):
     """
 
     query_user = User.objects.filter(id=request.user.id)
-    print(f" Query user : {query_user}")
     if query_user.exists():
         user = User.objects.get(id=request.user.id)
         Profile.objects.get_or_create(user=query_user[0])
@@ -254,19 +259,16 @@ def save_products_pair(request, product_code, substitute_code):
 
     if product_code and substitute_code:
 
-        print(f"Saving {substitute_code} and {product_code} ")
         # Get both products
         product_array = logic.get_product_array(product_code)
         substitute_array = logic.search_product(substitute_code)
 
         product_is_saved = False
         if product_array is not None:
-            print(f"product_array : {product_array}")
             product_is_saved = logic.save_product(product_array)
 
         substitute_is_saved = False
         if substitute_array is not None:
-            print(f"substitute_array : {substitute_array}")
             substitute_is_saved = logic.save_product(substitute_array)
 
         stared = False
