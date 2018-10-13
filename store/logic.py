@@ -50,7 +50,7 @@ def get_products_id(product):
     :param product:
     :return: product id
     """
-    url = f"https://fr.openfoodfacts.org/cgi/search.pl?search_terms={product}"
+    url = "https://fr.openfoodfacts.org/cgi/search.pl?search_terms={}".format(product)
 
     try:
         # Getting the id
@@ -59,8 +59,6 @@ def get_products_id(product):
         # logging.info(products_id)
         return products_id
     except KeyError:
-        print(f"It doesn't work with {product} (get_product:logic)")
-        logging.error(f"It doesn't work with %s (get_product:logic)", product)
         return None
 
 
@@ -70,8 +68,6 @@ def search_product(products_id):
     :param products_id: Requested product(s)
     :return: Product array : name, code, grade, image, categories, nutriments
     """
-    print(f"Getting {products_id} ...")
-
     products_id = get_products_id(products_id)
 
     i = 0
@@ -79,7 +75,6 @@ def search_product(products_id):
     while product_array is None and len(products_id) > i:
         product_array = get_product(products_id[i])
         i += 1
-    print(product_array)
     return product_array
 
 
@@ -111,9 +106,11 @@ def save_product(product_array):
             categories=product_array[4],
             nutriments=product_array[5]
         )
+        logging.info("Success : Product in database !")
         return True
 
     except ValueError:
+        logging.info("Fail : Get or create product didn't work ...")
         return False
 
 
@@ -181,21 +178,15 @@ def in_database(product_id):
     stored_product = Product.objects.filter(code=product_id).count()
 
     if stored_product == 1:
-        print(f"The product is already in database : {product_id} (logic)")
-        logging.info(f"The product is already in database : %s (logic)", product_id)
         return Product.objects.get(code=product_id)
 
     elif stored_product > 1:
         while stored_product > 1:
-            print(f"The product seems to have more than one existence")
-            logging.warning(f"The product seems to have more than one existence")
             print("Destroy...")
             Product.objects.filter(code=product_id).delete()
         return Product.objects.get(code=product_id)
 
     else:
-        print(f"The product will be saved : {product_id} (logic)")
-        logging.info(f"The product will be saved : %s (logic)", product_id)
         return False
 
 
@@ -230,10 +221,7 @@ def pull_product(product_id, product_code=None):
     :param product_code: If fetching substitutes this is the product to substitute
     :return: Product array : Product queryset, Category, List of categories, Grade, Id
     """
-    page = f"https://world.openfoodfacts.org/api/v0/product/{product_id}.json"
-    print(f"Pulling out product : {page} (logic)")
-    logging.info(f"Pulling out product : %s (logic)", page)
-
+    page = "https://world.openfoodfacts.org/api/v0/product/{}.json".format(product_id)
     data = requests.get(page).json()
 
     if data:
@@ -275,7 +263,6 @@ def fetch_product_array(product, product_code=None):
     :param product_code:
     :return: product array
     """
-    print(f"Prod:{product}prod!")
     categories, image, name, code, grade, nutriments = 0, 0, 0, 0, 0, 0
 
     if 'code' in product:
@@ -284,35 +271,22 @@ def fetch_product_array(product, product_code=None):
 
             if product['code'] != product_code:
                 code = product['code']
-                # print(f"{code}!={product_code}")
-                # print(f"Code is {code}")
-                # logging.info(f"{code}!={product_code}")
-                # logging.info(f"Code is {code}")
             else:
-                # logging.info("This is the product we try to substitute !")
-                # print("This is the product we try to substitute !")
                 return None
         else:
             code = product['code']
-            # print(f"Code is {code}")
-            # logging.info(f"Code is {code}")
 
     if 'categories_hierarchy' in product:
         categories = product['categories_hierarchy']
-        # print(f"Categories are")
-        # print(categories)
 
     if 'image_url' in product:
         image = product['image_url']
-        # print(f"Image is {image}")
 
     if 'product_name' in product:
         name = product['product_name']
-        # print(f"Name is {name}")
 
     if 'nutrition_grades' in product:
         grade = product['nutrition_grades']
-        # print(f"Grade is {grade}")
 
     if 'nutriments' in product:
         nutriments = product['nutriments']
@@ -356,6 +330,34 @@ def get_substitutes(categories, product_code, minimal_grade):
     return substitutes
 
 
+def get_nova_substitutes(categories, product_code, minimal_nova):
+    """
+    Get substitutes for product
+    :param categories: The requested list of categories
+    :param product_code: The product code
+    :param minimal_nova: The minimal nova
+    :return:
+    """
+    # print("get substitutes (logic)")
+    # logging.info("get substitutes (logic)")
+    categories = list_categories(categories)
+
+    substitutes = None
+    while substitutes is None:
+
+        # category = get_category(categories)
+
+        if len(categories) > 1:
+            category = categories[-1]
+            categories = categories.pop()
+        else:
+            category = categories[0]
+
+        substitutes = search_nova_substitutes(category, minimal_nova, product_code)
+
+    return substitutes
+
+
 def search_substitutes(category, minimal_grade, product_code):
     """
     Search substitutes
@@ -370,7 +372,6 @@ def search_substitutes(category, minimal_grade, product_code):
     if url is not None:
 
         print(" We will use this URL to fetch substitutes ")
-        print(f"{url} (get_substitutes:logic)")
 
         nutrition_score = ord('a')
         substitutes = None
@@ -384,8 +385,36 @@ def search_substitutes(category, minimal_grade, product_code):
         return substitutes
 
     else:
-        print(f"We didn't get the right URL to fetch substitutes !...")
-        logging.error(f"We didn't get the right URL to fetch substitutes !...")
+        return None
+
+
+def search_nova_substitutes(category, minimal_nova, product_code):
+    """
+    Search substitutes
+    :param category:
+    :param minimal_nova:
+    :param product_code:
+    :return: substitutes
+    """
+    url = url_category_for_grade(category, minimal_nova)
+    # [url, category] = try_url_redirection(url, category)
+
+    if url is not None:
+
+        print(" We will use this URL to fetch substitutes ")
+
+        nutrition_score = ord('a')
+        substitutes = None
+
+        i = -1
+
+        while substitutes is None and 4 > i and i <= minimal_nova:
+            i += 1
+            url = url_category_for_nova(category, nova=i)
+            nova_substitutes = fetch_substitutes(url, product_code)
+        return nova_substitutes
+
+    else:
         return None
 
 
@@ -398,9 +427,7 @@ def fetch_substitutes(url, product_code):
     """
     substitutes = []
 
-    print(url)
     products_id = fetch_products_id(url)
-    print(f"products id : {products_id}")
 
     if products_id:
 
@@ -411,9 +438,6 @@ def fetch_substitutes(url, product_code):
                 product_array = get_product(product_val)
 
                 if product_array:
-                    print(f"We are getting subs array")
-                    print(f"{product_array}")
-
                     substitutes.append(product_array)
 
                 if len(substitutes) >= 6:
@@ -436,9 +460,7 @@ def list_categories(categories):
         categories = categories.replace("]", "")
         categories = categories.replace("[", "")
         categories = categories.replace("'", "")
-        print(f"Categories : {categories}")
         categories = ''.join(categories).split(',')
-        print(f"Categories : {categories}")
     return categories
 
 
@@ -449,16 +471,30 @@ def url_category_for_grade(category, grade):
     :param grade:
     :return:
     """
-    api_search = "https://fr.openfoodfacts.org/cgi/search.pl?action=process"
-    category_as_first_filter = "&tagtype_0=categories&tag_contains_0=contains"
-    grade_as_second_filter = "tagtype_1=nutrition_grades&tag_contains_1=contains"
-    url_params = '&sort_by=unique_scans_n&page_size=20&axis_x=energy&axis_y=products_n'
-    display_method = "action=display"
 
-    url = f"{api_search}{category_as_first_filter}&tag_0={category}" \
-          f"&{grade_as_second_filter}&tag_1={grade}{url_params}" \
-          f"&{display_method}"
-    print(url)
+    url = "https://fr.openfoodfacts.org/cgi/search.pl?action=process&" \
+          "tagtype_0=categories&tag_contains_0=contains&tag_0={}" \
+          "&tagtype_1=nutrition_grades&tag_contains_1=contains&tag_1={}" \
+          "&sort_by=unique_scans_n&page_size=20&axis_x=energy&axis_y=products_n" \
+          "&action=display".format(category, grade)
+
+    return url
+
+
+def url_category_for_nova(category, nova):
+    """
+        Url category for grade
+        :param category:
+        :param nova:
+        :return:
+        """
+
+    url = "https://fr.openfoodfacts.org/cgi/search.pl?action=process&" \
+          "tagtype_0=categories&tag_contains_0=contains&tag_0={}" \
+          "&tagtype_1=nova_groups&tag_contains_1=contains&tag_1={}" \
+          "&sort_by=unique_scans_n&page_size=20&axis_x=energy&axis_y=products_n" \
+          "&action=display".format(category, nova)
+
     return url
 
 
