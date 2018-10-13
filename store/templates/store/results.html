@@ -56,6 +56,27 @@
                                     </div>
                                 </div>
                             </div>
+                            <a href="{% url 'store:search product_code=product_code nova=4%}#substitutes"
+                                    style="color:black;text-decoration: none;">
+                            <button data-toggle="modal"  class='btn btn-warning' data-target="#search_nova">
+                                      Voir les alternatives moins transformées
+                            </button>
+                            </a>
+                            <!-- Modal -->
+                            <div style='color:black;' class="modal fade" id='search_nova' role="dialog">
+                                <div class="modal-dialog modal-sm">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h4 class="modal-title">Recherche ...</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Nous recherchons des produits moins transformés que {{ product_name }}...</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             {% endif %}
                         </div>
                     </div>
