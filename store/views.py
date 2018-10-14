@@ -70,18 +70,18 @@ def index(request):
     return render(request, 'store/index.html', context)
 
 
-def search(request, product_code=None):
+def search(request, product_code=None, nova=False):
     """
     Search product and substitutes
     :param request:
     :param product_code:
+    :param nova:
     :return: results page
     """
     query = request.GET.get('query')
     full_result = request.GET.get('full_result')
-    nova = request.GET.get('nova')
     product_array = logic.get_product_array(query, product_code)
-
+    print("Nova : {}".format(nova))
     if product_code is not None:
         full_result = True
 
@@ -98,26 +98,40 @@ def search(request, product_code=None):
         ] \
             = product_array
 
+        product_nova = 0
         substitutes = None
+
         if full_result:
             if nova:
+                product_nova = logic.pull_product(product_code, nova=True)
+                print("This is the nova group for this product {}".format(product_nova))
+
                 print("We are searching for more natural products ! (view)")
-                substitutes = logic.get_nova_substitutes(product_categories, product_array[1], nova)
+                substitutes = logic.get_nova_substitutes(product_categories, product_array[1])
+                # for substitute in substitutes:
+                #     nova_list.append(substitute[5]['nova-group'])
+                s = 0
+
+                for substitute in substitutes:
+                    substitutes[s] = [substitutes[s], substitute[5]['nova-group']]
+                    s += 1
             else:
                 print("Now for the substitutes ! (view)")
                 substitutes = logic.get_substitutes(product_categories, product_array[1], product_grade)
 
         product_code = logic.int_code(product_code)
+        print("Product nova : {}".format(product_nova))
         context = {
             'query': query,
             'categories': product_categories,
             'product_name': product_name,
             'product_code': product_code,
             'product_grade': product_grade,
+            'product_nova': product_nova,
             'product_image': product_image,
             'product_nutriments': product_nutriments,
             'full_result': full_result,
-            'substitutes': substitutes
+            'substitutes': substitutes,
         }
         logging.info('New search for {}'.format(product_name))
         return render(request, 'store/results.html', context)
@@ -128,6 +142,7 @@ def search(request, product_code=None):
 def product_page(request, product_code):
     """
     Get a page for product
+
     :param request:
     :param product_code:
     :return: Page product
