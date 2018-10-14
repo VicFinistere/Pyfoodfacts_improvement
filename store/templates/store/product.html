@@ -19,7 +19,7 @@
                         {% if product_grade %}
                         <span class="product_grade score_{{product_grade}}">{{product_grade|upper}}</span>
                         {% endif %}
-                        <a href="{% url 'store:search' product_code=product_code %}">
+                        <a href="{% url 'store:search' product_code=product_code nova='false' %}">
                             <img
                                     style="max-width:400px;max-height:120px;"
                                     class='product_result img-responsive img-rounded'

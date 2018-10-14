@@ -25,7 +25,10 @@ urlpatterns = [
     path('update_profile/', views.update_profile,
          name='update_profile'),
 
-    path('search/<int:product_code>', views.search,
+    path('search/product_code=<int:product_code>', views.search,
+         name='search'),
+
+    path('search/product_code=<int:product_code>&nova=<slug:nova>', views.search,
          name='search'),
 
     path('product_page/<int:product_code>', views.product_page,
