@@ -214,11 +214,12 @@ def get_product(product_id):
             return None
 
 
-def pull_product(product_id, product_code=None):
+def pull_product(product_id, product_code=None, nova=False):
     """
     Save product
     :param product_id: Requested product
     :param product_code: If fetching substitutes this is the product to substitute
+    :param nova: Searching for group nova boolean
     :return: Product array : Product queryset, Category, List of categories, Grade, Id
     """
     page = "https://world.openfoodfacts.org/api/v0/product/{}.json".format(product_id)
@@ -239,7 +240,10 @@ def pull_product(product_id, product_code=None):
                     # logging.info("Product code is None so we are fetching product !")
 
                     # We are fetching product
-                    product_array = fetch_product_array(product)
+                    if nova:
+                        product_array = fetch_nova_group(product)
+                    else:
+                        product_array = fetch_product_array(product)
 
                 if product_array is not None:
                     return product_array
@@ -302,6 +306,22 @@ def fetch_product_array(product, product_code=None):
         return None
 
 
+def fetch_nova_group(product):
+    """
+    Fetch nova group
+    :param product:
+    :return: nova group
+    """
+    if 'nutriments' in product:
+        nutriments = product['nutriments']
+
+        if 'nova-group' in nutriments:
+            print("{}".format(nutriments['nova-group']))
+            return nutriments['nova-group']
+        else:
+            return None
+
+
 def get_substitutes(categories, product_code, minimal_grade):
     """
     Get substitutes for product
@@ -330,32 +350,35 @@ def get_substitutes(categories, product_code, minimal_grade):
     return substitutes
 
 
-def get_nova_substitutes(categories, product_code, minimal_nova):
+def get_nova_substitutes(categories, product_code):
     """
     Get substitutes for product
     :param categories: The requested list of categories
     :param product_code: The product code
-    :param minimal_nova: The minimal nova
     :return:
     """
     # print("get substitutes (logic)")
     # logging.info("get substitutes (logic)")
     categories = list_categories(categories)
+    minimal_nova = pull_product(product_code, nova=True)
+    if minimal_nova is None:
+        return None
+    else:
+        print("{}(get nova substitutes)".format(minimal_nova))
+        nova_substitutes = None
+        while nova_substitutes is None:
 
-    substitutes = None
-    while substitutes is None:
+            # category = get_category(categories)
 
-        # category = get_category(categories)
+            if len(categories) > 1:
+                category = categories[-1]
+                categories = categories.pop()
+            else:
+                category = categories[0]
 
-        if len(categories) > 1:
-            category = categories[-1]
-            categories = categories.pop()
-        else:
-            category = categories[0]
+            nova_substitutes = search_nova_substitutes(category, minimal_nova, product_code)
 
-        substitutes = search_nova_substitutes(category, minimal_nova, product_code)
-
-    return substitutes
+        return nova_substitutes
 
 
 def search_substitutes(category, minimal_grade, product_code):
@@ -403,12 +426,10 @@ def search_nova_substitutes(category, minimal_nova, product_code):
 
         print(" We will use this URL to fetch substitutes ")
 
-        nutrition_score = ord('a')
-        substitutes = None
-
+        nova_substitutes = None
         i = -1
 
-        while substitutes is None and 4 > i and i <= minimal_nova:
+        while nova_substitutes is None and 4 > i and i <= int(minimal_nova):
             i += 1
             url = url_category_for_nova(category, nova=i)
             nova_substitutes = fetch_substitutes(url, product_code)
