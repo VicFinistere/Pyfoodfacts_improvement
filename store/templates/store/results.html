@@ -108,9 +108,8 @@
                             <div class="col-xs-4 col-lg-4">
                                 <ul>
                                     <li style="list-style:none;">
-                                        <p>{{substitute.0.0|title|truncatewords:3}}</p>
                                         {% if product_nova %}
-
+                                            <p>{{substitute.0.0|title|truncatewords:3}}</p>
                                             {% if substitute.0.2 == "a" %}
                                             <p class="substitute_grade score_a">{{substitute.1}}</p>
                                             {% elif substitute.0.2 == "b" %}
@@ -153,6 +152,7 @@
                                             </div>
                                             <br><br>
                                         {% else %}
+                                            <p>{{substitute.0|title|truncatewords:3}}</p>
                                             {% if substitute.2 == "a" %}
                                             <p class="substitute_grade score_a">{{substitute.2|upper}}</p>
                                             {% elif substitute.2 == "b" %}
