@@ -80,6 +80,17 @@ def search_product(products_id):
     return product_array
 
 
+def search_incomplete_product(query):
+    """
+    Search incomplete product
+    :param query:
+    :return: Incomplete product
+    """
+
+    products_id = get_products_id(query)
+    return pull_product(products_id[0], minimal_search=True)
+
+
 def fetch_products_id(url):
     """
     Fetch products in txt
@@ -220,12 +231,13 @@ def get_product(product_id, check_in_db=True):
             return None
 
 
-def pull_product(product_id, product_code=None, nova=False):
+def pull_product(product_id, product_code=None, nova=False, minimal_search=False):
     """
     Save product
     :param product_id: Requested product
     :param product_code: If fetching substitutes this is the product to substitute
     :param nova: Searching for group nova boolean
+    :param minimal_search: Bool to determine that we just want the minimal info
     :return: Product array : Product queryset, Category, List of categories, Grade, Id
     """
     page = "https://world.openfoodfacts.org/api/v0/product/{}.json".format(product_id)
@@ -249,7 +261,7 @@ def pull_product(product_id, product_code=None, nova=False):
                     if nova:
                         product_array = fetch_nova_group(product)
                     else:
-                        product_array = fetch_product_array(product)
+                        product_array = fetch_product_array(product, minimal_search=minimal_search)
 
                 if product_array is not None:
                     return product_array
@@ -266,49 +278,72 @@ def pull_product(product_id, product_code=None, nova=False):
         return None
 
 
-def fetch_product_array(product, product_code=None):
+def fetch_product_array(product, product_code=None, minimal_search=False):
     """
     Fetch product array
     :param product:
     :param product_code:
+    :param minimal_search: Boolean to determine that we just want the minimal info
     :return: product array
     """
     categories, image, name, code, grade, nutriments = 0, 0, 0, 0, 0, 0
 
-    if 'code' in product:
+    if not minimal_search:
+        if 'code' in product:
 
-        if product_code is not None:
+            if product_code is not None:
 
-            if product['code'] != product_code:
-                code = product['code']
+                if product['code'] != product_code:
+                    code = product['code']
+                else:
+                    return None
             else:
-                return None
+                code = product['code']
+
+        if 'categories_hierarchy' in product:
+            categories = product['categories_hierarchy']
+
+        if 'image_url' in product:
+            image = product['image_url']
+
+        if 'product_name' in product:
+            name = product['product_name']
+
+        if 'nutrition_grades' in product:
+            grade = product['nutrition_grades']
+
+        if 'nutriments' in product:
+            nutriments = product['nutriments']
+
+        if categories and image and name and grade and nutriments:
+            print("Fetching product array has worked !")
+            logging.info("Fetching product array has worked !")
+            return [name, code, grade, image, categories, nutriments]
+
         else:
-            code = product['code']
-
-    if 'categories_hierarchy' in product:
-        categories = product['categories_hierarchy']
-
-    if 'image_url' in product:
-        image = product['image_url']
-
-    if 'product_name' in product:
-        name = product['product_name']
-
-    if 'nutrition_grades' in product:
-        grade = product['nutrition_grades']
-
-    if 'nutriments' in product:
-        nutriments = product['nutriments']
-
-    if categories and image and name and grade and nutriments:
-        print("Fetching product array has worked !")
-        logging.info("Fetching product array has worked !")
-        return [name, code, grade, image, categories, nutriments]
-
+            print("Fetching product array didn't worked !")
+            logging.warning("Fetching product array didn't worked !")
+            return None
     else:
-        print("Fetching product array didn't worked !")
-        logging.warning("Fetching product array didn't worked !")
+        fetch_product_minimal_array(product)
+
+
+def fetch_product_minimal_array(product):
+    """
+    Fetch product minimal array
+    :param product:
+    :return: Product minimal info
+    """
+    if 'image_url' in product and 'product_name' in product and 'code' in product:
+        name = product['product_name']
+        image = product['image_url']
+        code = product['code']
+        if 'nutrition_grades' in product:
+            grade = product['nutrition_grades']
+            return [name, grade, image, code]
+        else:
+            return [name, image, code]
+    else:
         return None
 
 
