@@ -1,0 +1,56 @@
+{% extends 'store/base.html' %}
+
+{% load static %}
+
+{% block body %}
+{% for product in product_name %}
+{% if forloop.first %}
+<header class="masthead text-center text-white d-flex">
+    <div id='product' class="container my-auto">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <h1 class="text-uppercase">
+                    <strong>{{product_name|title|truncatewords:3}}</strong>
+                </h1>
+                <hr>
+            </div>
+            <div class="col-lg-8 mx-auto">
+                <div title="{{product_name|title}}" class="col-sm-4 mx-auto text-center">
+                    {% if product_grade %}
+                    <span class="product_grade score_{{product_grade}}">{{product_grade|upper}}</span>
+                    {% endif %}
+                    <a href="https://fr.openfoodfacts.org/produit/{{product_code}}/">
+                        <img style="max-width:400px;max-height:120px;"
+                             class='product_result img-responsive img-rounded js-scroll-trigger'
+                             src="{{product_image}}" title='{{product_name}}' alt='{{product_name}}'></a>
+                    <div class="mx-auto">
+                    </div>
+                </div>
+                <p>Ce produit n'est pas suffisament renseigné ...</p>
+                <p>
+                    <small>Vous pouvez aider les équipes de Open Food Facts à compléter les informations de ce produit
+                        !
+                    </small>
+                </p>
+                <a class='btn btn-warning' href="https://fr.openfoodfacts.org/produit/{{product_code}}/">
+                    Afficher le produit sur Open Food Facts
+                </a>
+            </div>
+            {% endif %}
+            {% endfor %}
+
+        </div>
+    </div>
+</header>
+<section class="bg-primary">
+    <div class="container text-faded">
+        <p class="text-center">
+            <small>
+                Cette application utilise la base de données Openfoodfacts et le framework Django !
+                <br>
+                ( https://openfoodfacts.org )
+            </small>
+        </p>
+    </div>
+</section>
+{% endblock %}
