@@ -88,6 +88,7 @@ def search_incomplete_product(query):
     """
 
     products_id = get_products_id(query)
+    print("Products ids : {}".format(products_id))
     return pull_product(products_id[0], minimal_search=True)
 
 
@@ -325,7 +326,7 @@ def fetch_product_array(product, product_code=None, minimal_search=False):
             logging.warning("Fetching product array didn't worked !")
             return None
     else:
-        fetch_product_minimal_array(product)
+        return fetch_product_minimal_array(product)
 
 
 def fetch_product_minimal_array(product):
