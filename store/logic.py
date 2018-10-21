@@ -1,9 +1,11 @@
 """
 This file contains all the app logic functions ( logic.py )
 """
-import re
 import logging
+import re
+
 import requests
+
 from .models import Product, Favorite, User
 
 
@@ -171,7 +173,9 @@ def delete_product(user, product_code, substitute_code):
 
 def in_database(product_id):
     """
-    Check if in database
+    Check
+
+    base
     :param product_id: product id
     :return: product
     """
@@ -190,13 +194,15 @@ def in_database(product_id):
         return False
 
 
-def get_product(product_id):
+def get_product(product_id, check_in_db=True):
     """
     Get product array
     :param product_id: Requested product
+    :param check_in_db Boolean to check in database
     :return: product_array : Product, Category, Code, Grade, List of categories
     """
-    if in_database(product_id):
+
+    if check_in_db and in_database(product_id):
         product_object = Product.objects.get(code=product_id)
         return [product_object.name,
                 product_object.code,
@@ -432,18 +438,19 @@ def search_nova_substitutes(category, minimal_nova, product_code):
         while nova_substitutes is None and 4 > i and i <= int(minimal_nova):
             i += 1
             url = url_category_for_nova(category, nova=i)
-            nova_substitutes = fetch_substitutes(url, product_code)
+            nova_substitutes = fetch_substitutes(url, product_code, in_db_permission=False)
         return nova_substitutes
 
     else:
         return None
 
 
-def fetch_substitutes(url, product_code):
+def fetch_substitutes(url, product_code, in_db_permission=True):
     """
     Fetch substitutes
     :param url: Products url
     :param product_code: Product code
+    :param in_db_permission  Boolean to authorize check in database
     :return:
     """
     substitutes = []
@@ -456,7 +463,7 @@ def fetch_substitutes(url, product_code):
             print(product_val)
             print(product_code)
             if product_val != product_code:
-                product_array = get_product(product_val)
+                product_array = get_product(product_val, check_in_db=in_db_permission)
 
                 if product_array:
                     substitutes.append(product_array)
