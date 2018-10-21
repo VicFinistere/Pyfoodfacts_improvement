@@ -12,7 +12,6 @@ from django.template import RequestContext
 from django.urls import reverse_lazy
 from django.views import generic
 
-import logging
 from gofacts_project import settings
 from store import logic
 from .models import Product, Profile
@@ -136,6 +135,39 @@ def search(request, product_code=None, nova=False):
         logging.info('New search for {}'.format(product_name))
         return render(request, 'store/results.html', context)
 
+    return incomplete_product_search(request=request, query=query)
+
+
+def incomplete_product_search(request, query):
+    product = logic.search_incomplete_product(query)
+
+    if product:
+        if product is not None:
+
+            if len(product) == 4:
+                [product_name, product_grade, product_image, product_code] = product
+                context = {
+                    'query': query,
+                    'product_name': product_name,
+                    'product_grade': product_grade,
+                    'product_image': product_image,
+                    'product_code': product_code
+                }
+                logging.info('New search for {}'.format(product_name))
+                return render(request, 'store/incomplete.html', context)
+
+            else:
+                [product_name, product_image, product_code] = product
+                context = {
+                    'query': query,
+                    'product_name': product_name,
+                    'product_image': product_image,
+                    'product_code': product_code
+                }
+                logging.info('New search for {}'.format(product_name))
+                return render(request, 'store/incomplete.html', context)
+
+        raise Http404("Product can't be found...")
     raise Http404("There is no product for the search")
 
 
