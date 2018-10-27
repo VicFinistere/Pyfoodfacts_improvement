@@ -392,25 +392,22 @@ def get_substitutes(categories, product_code, minimal_grade):
     return substitutes
 
 
-def get_nova_substitutes(categories, product_code):
+def get_nova_substitutes(categories, product_code, minimal_nova):
     """
     Get substitutes for product
+    :param minimal_nova:  Minimal category nova
     :param categories: The requested list of categories
     :param product_code: The product code
     :return:
     """
-    # print("get substitutes (logic)")
-    # logging.info("get substitutes (logic)")
+
     categories = list_categories(categories)
-    minimal_nova = pull_product(product_code, nova=True)
     if minimal_nova is None:
         return None
     else:
         print("{}(get nova substitutes)".format(minimal_nova))
         nova_substitutes = None
         while nova_substitutes is None:
-
-            # category = get_category(categories)
 
             if len(categories) > 1:
                 category = categories[-1]

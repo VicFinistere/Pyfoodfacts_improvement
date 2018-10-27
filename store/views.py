@@ -108,7 +108,7 @@ def search(request, product_code=None, nova=False):
                 print("This is the nova group for this product {}".format(product_nova))
 
                 print("We are searching for more natural products ! (view)")
-                substitutes = logic.get_nova_substitutes(product_categories, product_array[1])
+                substitutes = logic.get_nova_substitutes(product_categories, product_array[1], product_nova)
                 # for substitute in substitutes:
                 #     nova_list.append(substitute[5]['nova-group'])
                 s = 0
