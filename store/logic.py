@@ -458,8 +458,7 @@ def search_nova_substitutes(category, minimal_nova, product_code):
     :param product_code:
     :return: substitutes
     """
-    url = url_category_for_grade(category, minimal_nova)
-    # [url, category] = try_url_redirection(url, category)
+    url = url_category_for_nova(category, minimal_nova)
 
     if url is not None:
 
