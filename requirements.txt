@@ -2,7 +2,7 @@ antiorm==1.2.1
 certifi==2018.8.24
 chardet==3.0.4
 dj-database-url==0.5.0
-Django==2.2.13
+Django==2.2.21
 django-debug-toolbar==1.10
 gunicorn==19.9.0
 idna==2.7
